@@ -21,7 +21,13 @@ export type Shot = {
 };
 export type Captured = { key: string; png: string; width: number; height: number; mobile: boolean; boxes: { n: number; x: number; y: number; w: number; h: number; text: string }[] };
 
-export async function capture(base: string, shots: Shot[], login: (page: Page, as: string) => Promise<void>): Promise<Record<string, Captured>> {
+export async function capture(
+  base: string,
+  shots: Shot[],
+  login: (page: Page, as: string) => Promise<void>,
+  /** CSS applied before each capture, e.g. to stop sticky bars covering the shot. */
+  captureCss = ".topbar{position:static!important}",
+): Promise<Record<string, Captured>> {
   const browser: Browser = await chromium.launch();
   const out: Record<string, Captured> = {};
   const contexts = new Map<string, Page>();
@@ -60,7 +66,7 @@ export async function capture(base: string, shots: Shot[], login: (page: Page, a
       boxes.push({ n: i + 1, x: b.x - pad, y: b.y + scrollY - offsetY - pad, w: b.width + pad * 2, h: b.height + pad * 2, text: c.text });
     }
     if (offsetY) await page.evaluate((y) => window.scrollTo(0, y), offsetY);
-    await page.addStyleTag({ content: ".topbar{position:static!important}" });
+    await page.addStyleTag({ content: captureCss });
     const buf = await page.screenshot({ fullPage: true, clip: { x: 0, y: offsetY, width: vw, height } });
     out[s.key] = { key: s.key, png: buf.toString("base64"), width: vw, height, mobile: !!s.mobile, boxes };
     console.log(`captured ${s.key}`);
