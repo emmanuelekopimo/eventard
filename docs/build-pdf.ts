@@ -69,7 +69,8 @@ async function main() {
   // Run the test suites first: integration tests reuse and change the test database.
   const counts = testCounts();
   const seeded = await reseed();
-  const server = spawn("npx", ["next", "start", "-p", String(PORT)], {
+  const server = spawn("node_modules/.bin/next", ["start", "-p", String(PORT)], {
+    detached: true,
     env: { ...process.env, DATABASE_URL: DB_URL, EVENTARD_TODAY: TODAY, SESSION_SECRET: "docs-secret-eventard-0123456789", NODE_ENV: "production" },
     stdio: "ignore",
   });
@@ -339,7 +340,8 @@ npm run test:e2e           # builds the app, seeds eventard_test with EVENTARD_T
     await printPdf(html, "docs/Eventard-Documentation.pdf", "Eventard documentation");
     console.log("wrote docs/Eventard-Documentation.pdf");
   } finally {
-    server.kill();
+    // Stop the whole process group so no Next.js server is left holding the port.
+    if (server.pid) process.kill(-server.pid, "SIGTERM");
   }
 }
 
