@@ -66,8 +66,9 @@ const login = async (page: Page, as: string) => {
 };
 
 async function main() {
-  const seeded = await reseed();
+  // Run the test suites first: integration tests reuse and change the test database.
   const counts = testCounts();
+  const seeded = await reseed();
   const server = spawn("npx", ["next", "start", "-p", String(PORT)], {
     env: { ...process.env, DATABASE_URL: DB_URL, EVENTARD_TODAY: TODAY, SESSION_SECRET: "docs-secret-eventard-0123456789", NODE_ENV: "production" },
     stdio: "ignore",
